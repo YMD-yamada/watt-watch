@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Browser-only laptop power meter. Hosted statically; does not run a server on your PC.",
   "scripts": {
-    "dev": "vite --host 127.0.0.1 --port 18793",
+    "dev:local": "vite --host 127.0.0.1 --port 18793",
+    "start": "node scripts/open-hosted.mjs",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1 --port 18793",
     "smoke": "node scripts/smoke.mjs",

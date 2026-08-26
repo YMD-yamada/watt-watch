@@ -6,7 +6,9 @@
 
 ## 公開URL
 
-デプロイ後に README とポートフォリオへ載せます。
+https://watt-watch-alpha.vercel.app/
+
+PC上の Node サーバーは不要です。Chrome / Edge でノートPCから開いてください。
 
 ## 使い方
 
