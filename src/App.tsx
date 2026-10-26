@@ -211,6 +211,11 @@ export default function App() {
           </table>
         )}
       </section>
+      <footer className="support-foot">
+        <a href="https://ko-fi.com/ymdapps" target="_blank" rel="noopener noreferrer">
+          このアプリを応援する（Ko-fi）
+        </a>
+      </footer>
     </div>
   )
 }

@@ -265,3 +265,14 @@ td {
 .mono {
   font-family: var(--mono);
 }
+
+.support-foot {
+  text-align: center;
+  padding: 24px 0 8px;
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+.support-foot a {
+  color: inherit;
+}
