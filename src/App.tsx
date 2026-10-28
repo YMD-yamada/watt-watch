@@ -12,6 +12,32 @@ const VERDICT: Record<string, string> = {
   'no-battery': '電池情報なし',
 }
 
+// 結果を一言で。ワット数が分からない人にも良し悪しが伝わるように
+function verdictLine(sample: { supported: boolean; ok: boolean; charging: boolean; rateReady: boolean; netW: number; verdict: string }) {
+  if (!sample.supported || !sample.ok) return ''
+  if (!sample.charging) return 'ケーブルを挿すと、充電の速さを測れます。'
+  if (!sample.rateReady) return '測っています。そのまま少し待ってください。'
+  if (sample.verdict === 'charging') {
+    return sample.netW >= 30
+      ? '速い充電です。この充電器とケーブルは十分な力があります。'
+      : 'ふつうに充電できています。'
+  }
+  if (sample.verdict === 'weak') return '充電はできていますが遅めです。強めの充電器か別のケーブルを試してください。'
+  if (sample.verdict === 'undersupply') return '挿しているのに電池が減っています。充電器かケーブルの力が足りません。'
+  if (sample.verdict === 'full') return 'ほぼ満充電なので差が出にくい状態です。80%未満で比べてください。'
+  return '使う電力と充電がつり合って、電池の量を保っています。'
+}
+
+function toCsv(rows: { ts: number; label: string; chargeW: number; dischargeW: number; verdict: string; batteryPct: number }[]) {
+  const esc = (v: string) => `"${v.replace(/"/g, '""')}"`
+  const lines = rows.map((m) =>
+    [new Date(m.ts).toLocaleString('ja-JP'), m.label, m.chargeW.toFixed(1), (-m.dischargeW).toFixed(1), VERDICT[m.verdict] || m.verdict, `${m.batteryPct}`]
+      .map(esc)
+      .join(','),
+  )
+  return ['日時,名前,充電W,放電W,判定,残量%', ...lines].join('\r\n')
+}
+
 function formatW(n: number | undefined) {
   if (typeof n !== 'number' || Number.isNaN(n)) return '—'
   const sign = n > 0 ? '+' : ''
@@ -56,14 +82,13 @@ export default function App() {
   const [label, setLabel] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
-  const [proSoon, setProSoon] = useState(false)
 
   const tone = sample.verdict || 'unplugged'
   const hero = useMemo(() => {
     if (!sample.supported) {
       return {
         value: '—',
-        hint: 'このブラウザは電池API非対応です。Chrome / Edge のノートPCで開いてください。',
+        hint: 'この端末では電池の情報が取れません。スマホでは測れないので、ノートPCの Chrome か Edge で開いてください。',
       }
     }
     if (!sample.ok) return { value: '—', hint: '電池が見つかりません' }
@@ -97,6 +122,17 @@ export default function App() {
     }
   }
 
+  function exportCsv() {
+    const blob = new Blob(['\uFEFF' + toCsv(marks)], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'watt-watch.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const line = verdictLine(sample)
   const eta = sample.charging
     ? formatEta(sample.chargingTimeSec)
     : formatEta(sample.dischargingTimeSec)
@@ -117,10 +153,13 @@ export default function App() {
 
       <section className="hero" aria-live="polite">
         <p className="watts">{hero.value}</p>
+        {line ? <p className="verdict-line">{line}</p> : null}
         <p className="hint">{hero.hint}</p>
         <div className="pills">
           <span className="pill">{sample.charging ? '充電中' : 'ACなし / 放電'}</span>
-          <span className="pill">{VERDICT[sample.verdict] || '—'}</span>
+          {sample.verdict !== 'charging' && sample.verdict !== 'unplugged' ? (
+            <span className="pill">{VERDICT[sample.verdict] || '—'}</span>
+          ) : null}
           <span className="pill">残量 {sample.supported ? `${sample.batteryPct}%` : '—'}</span>
           {eta ? <span className="pill">{sample.charging ? `満充電まで ${eta}` : `残 ${eta}`}</span> : null}
         </div>
@@ -157,7 +196,6 @@ export default function App() {
         <article>
           <h2>読み方</h2>
           <ul>
-            <li>ホスティング上の静的アプリです。計測は開いているブラウザが行います。</li>
             <li>表示はケーブル定格ではなく、充電時間と電池容量からの推定ワットです。</li>
             <li>Chrome / Edge のノートPC向け。Firefox / デスクトップは電池情報が取れません。</li>
             <li>満充電に近いと差が出ません。80%未満で比較してください。</li>
@@ -173,12 +211,9 @@ export default function App() {
               onChange={(e) => setCapacityWh(Number(e.target.value) || 38)}
             />
           </label>
-          <button type="button" className="ghost" onClick={() => setProSoon(true)}>
-            比較CSVを書き出す
+          <button type="button" className="ghost" onClick={exportCsv} disabled={marks.length === 0}>
+            記録をCSVで保存
           </button>
-          {proSoon ? (
-            <p className="soon">Pro の CSV 書き出しは準備中です。今は画面の記録表を使ってください。</p>
-          ) : null}
         </article>
       </section>
 
