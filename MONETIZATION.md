@@ -4,14 +4,14 @@
 
 ## Chosen pattern
 
-- [x] Freemium（基本のリアルタイム表示は無料。比較CSV / 履歴は Pro）
+- [x] 応援（Ko-fi）。計測・記録・CSV 書き出しはすべて無料（2026-10-28 CSV を無料化。ユーザー数優先の方針）
 - [x] Affiliate（USB-C インラインテスター紹介。coming soon）
 
 ## Status
 
 - Implementation: フラグOFF
 - Feature flag: `MONETIZATION_ENABLED=false`
-- UI stub: 「比較CSVを書き出す」→ coming soon メッセージ
+- 「準備中」のPro表示は撤去（未完成に見えて使われにくいため）
 
 ## Cost vs revenue
 
